@@ -1,0 +1,5 @@
+{
+  "rules": {
+    "@porscheinformatik/template/test-automation-id": "error"
+  }
+}

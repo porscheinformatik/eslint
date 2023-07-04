@@ -34,7 +34,7 @@ module.exports = {
               },
               fix: (fixer) => {
                 return fixer.insertTextAfterRange(
-                  [0, node.startSourceSpan.end.offset - 1],
+                  [0, getLocationToInsert(node)],
                   ` data-testid="${determineTestId(node)}"`
                 );
               }
@@ -52,6 +52,15 @@ const TAGS_START_WITH = ['clr-'];
 function shouldHaveTestId(node) {
   return TAGS.has(node.name.toLowerCase())
       || TAGS_START_WITH.some(tag => node.name.startsWith(tag));
+}
+
+function getLocationToInsert(node) {
+  const startSpan = node.startSourceSpan.start.file.content.substring(node.startSourceSpan.start.offset, node.startSourceSpan.end.offset);
+  if (startSpan.endsWith('/>')) {
+    return node.startSourceSpan.end.offset - 2;
+  }
+
+  return node.startSourceSpan.end.offset - 1;
 }
 
 function determineTestId(node) {

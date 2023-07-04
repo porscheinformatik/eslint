@@ -25,7 +25,7 @@ ruleTester.run("test-automation-id", rule, {
   valid: [
     '<a href="..." data-testid="id">link</a>',
     '<button data-testid="id">link</button>',
-    '<input data-testid="id">',
+    '<input data-testid="id"/>',
     '<textarea data-testid="id">link</textarea>',
     '<select data-testid="id"><option data-testid="id"></option></select>',
     '<clr-datagrid data-testid="id">link</clr-datagrid>',
@@ -44,9 +44,19 @@ ruleTester.run("test-automation-id", rule, {
       output: '<button data-testid="button-3099912099491019">text</button>'
     },
     {
-      code: '<input type="text">',
+      code: '<input type="text"/>',
       errors: [{messageId: 'missingAttribute'}],
-      output: '<input type="text" data-testid="input-7329825340972269">'
+      output: '<input type="text" data-testid="input-8386839438878572"/>'
+    },
+    {
+      code: '<input/>',
+      errors: [{messageId: 'missingAttribute'}],
+      output: '<input data-testid="input-8606476617944665"/>'
+    },
+    {
+      code: '<input>',
+      errors: [{messageId: 'missingAttribute'}],
+      output: '<input data-testid="input-1457294834261236">'
     },
     {
       code: '<textarea></textarea>',

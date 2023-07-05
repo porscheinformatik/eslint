@@ -39,6 +39,16 @@ Then configure the rules you want to use under the rules section.
 }
 ```
 
+It's recommended to use the `recommended` configuration
+
+```json
+{
+    "extends": [
+        "plugin:@porscheinformatik/template/recommended"
+    ],
+}
+```
+
 ## Rules
 
 <!-- begin auto-generated rules list -->

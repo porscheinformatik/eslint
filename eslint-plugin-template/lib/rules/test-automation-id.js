@@ -19,7 +19,7 @@ module.exports = {
 
   create(context) {
     return {
-      [`Element$1`]: function (node) {
+      [`Element`]: function (node) {
         if (shouldHaveTestId(node)) {
           const hasTestIdAttribute = node.attributes.some(
             attr => attr.name === 'data-testid'

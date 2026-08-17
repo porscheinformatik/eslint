@@ -29,6 +29,8 @@ ruleTester.run("test-automation-id", rule, {
     '<textarea data-testid="id">link</textarea>',
     '<select data-testid="id"><option data-testid="id"></option></select>',
     '<clr-datagrid data-testid="id">link</clr-datagrid>',
+    '<button [attr.data-testid]="id">link</button>',
+    '<a href="..." [attr.data-testid]="id">link</a>',
     '<div></div>'
   ],
 

@@ -29,6 +29,8 @@ ruleTester.run("test-automation-id", rule, {
     '<textarea data-testid="id">link</textarea>',
     '<select data-testid="id"><option data-testid="id"></option></select>',
     '<clr-datagrid data-testid="id">link</clr-datagrid>',
+    '<button [attr.data-testid]="id">link</button>',
+    '<a href="..." [attr.data-testid]="id">link</a>',
     '<div></div>'
   ],
 
@@ -82,6 +84,11 @@ ruleTester.run("test-automation-id", rule, {
       code: '<clr-datagrid>text</clr-datagrid>',
       errors: [{messageId: 'missingAttribute'}],
       output: '<clr-datagrid data-testid="clr-datagrid-3037853201439386">text</clr-datagrid>'
+    },
+    {
+      code: '<button [class.data-testid]="id">text</button>',
+      errors: [{messageId: 'missingAttribute'}],
+      output: '<button [class.data-testid]="id" data-testid="button-6048880155238369">text</button>'
     },
   ],
 });

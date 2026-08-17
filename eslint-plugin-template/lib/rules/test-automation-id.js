@@ -24,7 +24,7 @@ module.exports = {
           const hasTestIdAttribute = node.attributes.some(
             attr => attr.name === 'data-testid'
           ) || node.inputs.some(
-            input => input.name === 'data-testid'
+            input => input.keySpan && input.keySpan.details === 'attr.data-testid'
           );
 
           if (!hasTestIdAttribute) {

@@ -85,5 +85,10 @@ ruleTester.run("test-automation-id", rule, {
       errors: [{messageId: 'missingAttribute'}],
       output: '<clr-datagrid data-testid="clr-datagrid-3037853201439386">text</clr-datagrid>'
     },
+    {
+      code: '<button [class.data-testid]="id">text</button>',
+      errors: [{messageId: 'missingAttribute'}],
+      output: '<button [class.data-testid]="id" data-testid="button-6048880155238369">text</button>'
+    },
   ],
 });

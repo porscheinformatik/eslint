@@ -1,0 +1,21 @@
+name: Publish to npmjs.com
+on:
+  release:
+    types: [created]
+
+permissions:
+  id-token: write # Required for OIDC
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Use Node.js 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: 'https://registry.npmjs.org'
+      - name: Publish
+        run: npm run publish

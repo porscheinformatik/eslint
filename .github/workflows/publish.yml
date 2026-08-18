@@ -18,4 +18,6 @@ jobs:
           node-version: 24
           registry-url: 'https://registry.npmjs.org'
       - name: Publish
-        run: npm publish
+        run: |
+          cd eslint-plugin-template
+          npm publish

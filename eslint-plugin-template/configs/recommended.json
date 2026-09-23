@@ -1,5 +1,6 @@
 {
   "rules": {
-    "@porscheinformatik/template/test-automation-id": "error"
+    "@porscheinformatik/template/test-automation-id": "error",
+    "@porscheinformatik/template/datagrid-column-filter": "error"
   }
 }

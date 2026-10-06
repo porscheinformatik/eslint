@@ -57,11 +57,11 @@ It's recommended to use the `recommended` configuration
 ✅ Set in the `recommended` configuration.\
 🔧 Automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/user-guide/command-line-interface#--fix).
 
-| Name                                                           | Description                                                                  | 💼 | 🔧 |
-|:---------------------------------------------------------------|:-----------------------------------------------------------------------------|:---|:---|
-| [datagrid-column-filter](docs/rules/datagrid-column-filter.md) | Enforces a <clr-dg-filter> on <clr-dg-column> elements that bind clrDgField  |    | 🔧 |
-| [cds-icon-consistency](docs/rules/cds-icon-consistency.md)     | Enforces the *-standard shape and matching status on status icons <cds-icon> |    | 🔧 |
-| [test-automation-id](docs/rules/test-automation-id.md)         | Enforces data-testid on various tags for easier testautomation               | ✅ | 🔧 |
+| Name                                                           | Description                                                                    | 💼 | 🔧 |
+| :------------------------------------------------------------- | :----------------------------------------------------------------------------- | :- | :- |
+| [cds-icon-consistency](docs/rules/cds-icon-consistency.md)     | Enforces the *-standard shape and matching status on status icons (<cds-icon>) |    | 🔧 |
+| [datagrid-column-filter](docs/rules/datagrid-column-filter.md) | Enforces a <clr-dg-filter> on <clr-dg-column> elements that bind clrDgField    |    | 🔧 |
+| [test-automation-id](docs/rules/test-automation-id.md)         | Enforces data-testid on various tags for easier testautomation                 | ✅  | 🔧 |
 
 <!-- end auto-generated rules list -->
 

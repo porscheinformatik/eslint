@@ -61,7 +61,7 @@ It's recommended to use the `recommended` configuration
 | :--------------------------------------------------------------- | :----------------------------------------------------------------------------- | :- | :- |
 | [cds-icon-consistency](docs/rules/cds-icon-consistency.md)       | Enforces the *-standard shape and matching status on status icons (<cds-icon>) |    | 🔧 |
 | [datagrid-column-filter](docs/rules/datagrid-column-filter.md)   | Enforces a <clr-dg-filter> on <clr-dg-column> elements that bind clrDgField    |    | 🔧 |
-| [require-datagrid-export](docs/rules/require-datagrid-export.md) | Enforces an export button inside a <clr-dg-action-bar> on every <clr-datagrid> |    | 🔧 |
+| [require-datagrid-export](docs/rules/require-datagrid-export.md) | Enforces an export button directly above every <clr-datagrid>                  |    | 🔧 |
 | [test-automation-id](docs/rules/test-automation-id.md)           | Enforces data-testid on various tags for easier testautomation                 | ✅  | 🔧 |
 
 <!-- end auto-generated rules list -->

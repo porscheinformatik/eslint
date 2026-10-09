@@ -1,5 +1,5 @@
 /**
- * @fileoverview Enforces an export button inside a <clr-dg-action-bar> on every <clr-datagrid>
+ * @fileoverview Enforces an export button directly above every <clr-datagrid>
  * @author Porsche Informatik
  */
 "use strict";
@@ -8,7 +8,6 @@ const path = require("path");
 
 const DATAGRID = "clr-datagrid";
 const DATAGRID_REF = "datagrid";
-const ACTION_BAR = "clr-dg-action-bar";
 const EXPORT_BUTTON = "clr-export-datagrid-button";
 const REQUIRED_INPUTS = ["datagrid", "datagridRef"];
 const BACKEND_EXPORT_OUTPUT = "backendExport";
@@ -39,6 +38,16 @@ const findElement = (node, name) => {
     return null;
 };
 
+const isBlankText = (node) => typeof node.value === "string" && node.value.trim() === "";
+
+// Closest sibling before the given index, ignoring whitespace-only text
+const previousSibling = (siblings, index) =>
+    siblings.slice(0, index).reverse().find((node) => !isBlankText(node));
+
+// The export button itself, or one wrapped in @if / *ngIf
+const exportButtonIn = (node) =>
+    node && (node.name === EXPORT_BUTTON ? node : findElement(node, EXPORT_BUTTON));
+
 const hasInput = (element, name) =>
     element.attributes.some((a) => a.name === name) ||
     (element.inputs ?? []).some((i) => i.name === name);
@@ -48,15 +57,10 @@ const isServerDriven = (datagrid) =>
     (datagrid.outputs ?? []).some((o) => o.name === "clrDgRefresh");
 
 const afterTagName = (element) => element.startSourceSpan.start.offset + 1 + element.name.length;
-const afterStartTag = (element) => element.startSourceSpan.end.offset;
-const childIndent = (element) => " ".repeat(element.startSourceSpan.start.col + 2);
 
 //------------------------------------------------------------------------------
 // Generated markup
 //------------------------------------------------------------------------------
-
-const indent = (lines, prefix) => lines.map((line) => prefix + line);
-const asInsertion = (lines, prefix) => `\n${indent(lines, prefix).join("\n")}`;
 
 const exportButtonLines = ({id, ref, refProperty, backend}) => [
     `<${EXPORT_BUTTON}`,
@@ -70,11 +74,11 @@ const exportButtonLines = ({id, ref, refProperty, backend}) => [
     `</${EXPORT_BUTTON}>`,
 ];
 
-const actionBarLines = (names) => [
-    `<${ACTION_BAR} data-testid="${ACTION_BAR}-${names.id}">`,
-    ...indent(exportButtonLines(names), "  "),
-    `</${ACTION_BAR}>`,
-];
+// Inserted right above the datagrid
+const asLeadingInsertion = (lines, element) => {
+    const prefix = " ".repeat(element.startSourceSpan.start.col);
+    return `${lines.join(`\n${prefix}`)}\n${prefix}`;
+};
 
 //------------------------------------------------------------------------------
 // Rule
@@ -84,7 +88,7 @@ module.exports = {
     meta: {
         type: "suggestion",
         docs: {
-            description: "Enforces an export button inside a <clr-dg-action-bar> on every <clr-datagrid>",
+            description: "Enforces an export button directly above every <clr-datagrid>",
         },
         fixable: "code",
         schema: [],
@@ -92,10 +96,8 @@ module.exports = {
             missingTemplateRef:
                 "Datagrid needs a template reference. Add #{{ref}} and in the component: " +
                 "@ViewChild('{{ref}}', {read: ElementRef}) {{refProperty}}: ElementRef",
-            missingActionBar: `Datagrid has no <${ACTION_BAR}> with an export button`,
-            missingActionBarTestId: `<${ACTION_BAR}> requires a data-testid`,
-            missingExport: `<${ACTION_BAR}> has no <${EXPORT_BUTTON}>`,
-            buttonOutsideActionBar: `<${EXPORT_BUTTON}> must be placed inside <${ACTION_BAR}>`,
+            missingExport: `Datagrid has no <${EXPORT_BUTTON}> directly above it`,
+            exportInsideDatagrid: `<${EXPORT_BUTTON}> must be placed directly above the <${DATAGRID}>, not inside it`,
             missingInput: `<${EXPORT_BUTTON}> requires [{{input}}]`,
         },
     },
@@ -110,7 +112,7 @@ module.exports = {
         const usedRefs = new Set([...text.matchAll(TEMPLATE_REF_PATTERN)].map((m) => m[1]));
         const isMultiGrid = gridOffsets.length > 1;
 
-        const insertAt = (offset, text) => (fixer) => fixer.insertTextAfterRange([offset, offset], text);
+        const insertAt = (offset, content) => (fixer) => fixer.insertTextAfterRange([offset, offset], content);
 
         const allocateRef = (datagrid) => {
             if (!isMultiGrid) {
@@ -146,18 +148,20 @@ module.exports = {
             return names;
         };
 
-        const checkExportButton = (datagrid, actionBar, names) => {
-            const button = findElement(actionBar, EXPORT_BUTTON);
+        const checkExportButton = (datagrid, sibling, names) => {
+            const button = exportButtonIn(sibling);
 
             if (!button) {
                 const misplacedButton = findElement(datagrid, EXPORT_BUTTON);
-                context.report(misplacedButton
-                    ? {node: misplacedButton, messageId: "buttonOutsideActionBar"}
-                    : {
-                        node: actionBar,
-                        messageId: "missingExport",
-                        fix: insertAt(afterStartTag(actionBar), asInsertion(exportButtonLines(names), childIndent(actionBar))),
-                    });
+                if (misplacedButton) {
+                    context.report({node: misplacedButton, messageId: "exportInsideDatagrid"});
+                    return;
+                }
+                context.report({
+                    node: datagrid,
+                    messageId: "missingExport",
+                    fix: insertAt(datagrid.startSourceSpan.start.offset, asLeadingInsertion(exportButtonLines(names), datagrid)),
+                });
                 return;
             }
 
@@ -166,34 +170,17 @@ module.exports = {
                 .forEach((input) => context.report({node: button, messageId: "missingInput", data: {input}}));
         };
 
-        const checkActionBar = (datagrid, names) => {
-            const actionBar = findElement(datagrid, ACTION_BAR);
-
-            if (!actionBar) {
-                context.report({
-                    node: datagrid,
-                    messageId: "missingActionBar",
-                    fix: insertAt(afterStartTag(datagrid), asInsertion(actionBarLines(names), childIndent(datagrid))),
-                });
-                return;
+        // Walks sibling lists, since a grid's export button is its preceding sibling
+        const visit = (siblings) => siblings.forEach((node, index) => {
+            if (node.name === DATAGRID) {
+                const names = checkTemplateRef(node);
+                checkExportButton(node, previousSibling(siblings, index), names);
             }
-
-            if (!hasInput(actionBar, "data-testid")) {
-                context.report({
-                    node: actionBar,
-                    messageId: "missingActionBarTestId",
-                    fix: insertAt(afterTagName(actionBar), ` data-testid="${ACTION_BAR}-${names.id}"`),
-                });
-            }
-
-            checkExportButton(datagrid, actionBar, names);
-        };
+            visit(childrenOf(node));
+        });
 
         return {
-            [`Element[name="${DATAGRID}"]`](datagrid) {
-                const names = checkTemplateRef(datagrid);
-                checkActionBar(datagrid, names);
-            },
+            Program: (program) => visit(program.templateNodes ?? []),
         };
     },
 };

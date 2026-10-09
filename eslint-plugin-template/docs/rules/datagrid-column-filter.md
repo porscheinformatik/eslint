@@ -52,3 +52,33 @@ A `<clr-dg-column>` without a bound `clrDgField` is not affected by this rule:
 <clr-dg-column>Description</clr-dg-column>
 
 ```
+
+### `[(clrFilterValue)]` placement
+
+`[(clrFilterValue)]` (or `[clrFilterValue]`) must be bound on the concrete filter component (e.g.
+`<clr-string-filter>`, `<clr-numeric-filter>`) inside `<clr-dg-filter>`, not on `<clr-dg-column>` itself.
+When a filter component is already present, `--fix` moves the binding onto it automatically.
+
+Examples of **incorrect** code for this rule:
+
+```html
+
+<clr-dg-column [clrDgField]="'requestUid'" [(clrFilterValue)]="requestUid">
+  <clr-dg-filter>
+    <clr-string-filter clrProperty="requestUid"></clr-string-filter>
+  </clr-dg-filter>
+</clr-dg-column>
+
+```
+
+Examples of **correct** code for this rule:
+
+```html
+
+<clr-dg-column [clrDgField]="'requestUid'">
+  <clr-dg-filter>
+    <clr-string-filter clrProperty="requestUid" [(clrFilterValue)]="requestUid"></clr-string-filter>
+  </clr-dg-filter>
+</clr-dg-column>
+
+```

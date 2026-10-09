@@ -15,13 +15,16 @@ module.exports = {
     messages: {
       missingFilter: `<clr-dg-column> with clrDgField is missing a <clr-dg-filter> child`,
       legacyFilter: `Replace legacy <{{tag}}> with <clr-dg-filter><clr-{{filterType}}-filter>`,
-      redundantLegacyFilter: `Remove legacy <{{tag}}>, a <clr-dg-filter> is already present`
+      redundantLegacyFilter: `Remove legacy <{{tag}}>, a <clr-dg-filter> is already present`,
+      misplacedFilterValue: `[(clrFilterValue)] must be bound on the <{{tag}}> inside <clr-dg-filter>, not on <clr-dg-column>`
     }
   },
 
   create(context) {
     return {
       [`Element[name="clr-dg-column"]`]: function (node) {
+        checkMisplacedFilterValue(context, node);
+
         const fieldInput = getFieldInput(node);
 
         if (!fieldInput) {
@@ -75,6 +78,68 @@ const LEGACY_FILTER_TAGS = {
 
 function getFieldInput(node) {
   return node.inputs.find(input => input.name === 'clrDgField');
+}
+
+// [(clrFilterValue)] belongs on the concrete filter component (e.g. <clr-string-filter>) inside
+// <clr-dg-filter>, not on <clr-dg-column> itself.
+function checkMisplacedFilterValue(context, node) {
+  const filterValueInput = getFilterValueInput(node);
+
+  if (!filterValueInput) {
+    return;
+  }
+
+  const dgFilter = node.children.find(child => child.name === 'clr-dg-filter');
+  const targetFilter = dgFilter && getInnerFilterElement(dgFilter);
+
+  context.report({
+    node: filterValueInput,
+    messageId: 'misplacedFilterValue',
+    data: { tag: targetFilter ? targetFilter.name : 'clr-*-filter' },
+    fix: canMoveFilterValue(targetFilter)
+      ? fixer => buildMoveFilterValueFix(node, filterValueInput, targetFilter, fixer)
+      : null
+  });
+}
+
+function getFilterValueInput(node) {
+  return node.inputs.find(input => input.name === 'clrFilterValue');
+}
+
+function getInnerFilterElement(dgFilter) {
+  return dgFilter.children.find(child => child.name && /-filter$/.test(child.name));
+}
+
+function canMoveFilterValue(targetFilter) {
+  return Boolean(targetFilter) && Boolean(targetFilter.startSourceSpan) && !getFilterValueInput(targetFilter);
+}
+
+// Moves the [(clrFilterValue)] (or [clrFilterValue]) binding verbatim from <clr-dg-column> onto the
+// concrete filter component's opening tag, removing it (and one leading space) from the column.
+function buildMoveFilterValueFix(node, filterValueInput, targetFilter, fixer) {
+  const content = node.sourceSpan.start.file.content;
+  const attrText = content.substring(filterValueInput.sourceSpan.start.offset, filterValueInput.sourceSpan.end.offset);
+
+  let removeStart = filterValueInput.sourceSpan.start.offset;
+  if (content[removeStart - 1] === ' ') {
+    removeStart -= 1;
+  }
+
+  return [
+    fixer.removeRange([removeStart, filterValueInput.sourceSpan.end.offset]),
+    fixer.insertTextAfterRange([0, getAttributeInsertOffset(targetFilter)], ` ${attrText}`)
+  ];
+}
+
+function getAttributeInsertOffset(node) {
+  const span = node.startSourceSpan;
+  const tagText = span.start.file.content.substring(span.start.offset, span.end.offset);
+
+  if (tagText.endsWith('/>')) {
+    return span.end.offset - 2;
+  }
+
+  return span.end.offset - 1;
 }
 
 function hasFilterChild(node) {

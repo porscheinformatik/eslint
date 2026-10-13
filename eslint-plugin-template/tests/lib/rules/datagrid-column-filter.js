@@ -39,6 +39,13 @@ ruleTester.run("datagrid-column-filter", rule, {
     `<clr-dg-column>Description</clr-dg-column>`,
     // sorting only, no filter required since clrDgField is not set
     `<clr-dg-column [clrDgSortBy]="'name'">Name</clr-dg-column>`,
+    // clrFilterValue correctly bound on the filter component itself
+    `<clr-dg-column [clrDgField]="'requestUid'" data-testid="clr-dg-column-1">
+      {{ 'entity.history.requestuuid' | translate }}
+      <clr-dg-filter data-testid="clr-dg-filter-1">
+        <clr-string-filter clrProperty="requestUid" [(clrFilterValue)]="requestUid" data-testid="clr-string-filter-1"></clr-string-filter>
+      </clr-dg-filter>
+    </clr-dg-column>`,
   ],
 
   invalid: [
@@ -136,6 +143,33 @@ ruleTester.run("datagrid-column-filter", rule, {
         `\n` +
         `  <clr-dg-filter data-testid="clr-dg-filter-1">\n` +
         `    <clr-string-filter clrProperty="userGroups" data-testid="clr-string-filter-1"></clr-string-filter>\n` +
+        `  </clr-dg-filter>\n` +
+        `</clr-dg-column>`
+    },
+    // [(clrFilterValue)] on <clr-dg-column> must be moved onto the filter component inside <clr-dg-filter>
+    {
+      code:
+        `<clr-dg-column [clrDgField]="'requestUid'" [(clrFilterValue)]="requestUid" data-testid="clr-dg-column-1329365932109991">{{ 'entity.history.requestuuid' | translate }}\n` +
+        `        <clr-dg-filter data-testid="clr-dg-filter-4791755290297009">\n` +
+        `          <clr-string-filter clrProperty="requestUid" data-testid="clr-string-filter-721537092010840"></clr-string-filter>\n` +
+        `        </clr-dg-filter>\n` +
+        `      </clr-dg-column>`,
+      errors: [{ messageId: 'misplacedFilterValue' }],
+      output:
+        `<clr-dg-column [clrDgField]="'requestUid'" data-testid="clr-dg-column-1329365932109991">{{ 'entity.history.requestuuid' | translate }}\n` +
+        `        <clr-dg-filter data-testid="clr-dg-filter-4791755290297009">\n` +
+        `          <clr-string-filter clrProperty="requestUid" data-testid="clr-string-filter-721537092010840" [(clrFilterValue)]="requestUid"></clr-string-filter>\n` +
+        `        </clr-dg-filter>\n` +
+        `      </clr-dg-column>`
+    },
+    // no filter component present yet: reported but not auto-fixable
+    {
+      code: `<clr-dg-column [clrDgField]="'name'" [(clrFilterValue)]="nameFilter">Name</clr-dg-column>`,
+      errors: [{ messageId: 'missingFilter' }, { messageId: 'misplacedFilterValue' }],
+      output:
+        `<clr-dg-column [clrDgField]="'name'" [(clrFilterValue)]="nameFilter">Name\n` +
+        `  <clr-dg-filter>\n` +
+        `    <clr-string-filter clrProperty="name"></clr-string-filter>\n` +
         `  </clr-dg-filter>\n` +
         `</clr-dg-column>`
     },

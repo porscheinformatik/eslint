@@ -12,8 +12,8 @@ requiring a `<clr-export-datagrid-button>` placed directly above the datagrid.
 The rule checks that:
 
 - the `<clr-datagrid>` has a template reference (e.g. `#datagrid`),
-- the closest preceding sibling of the datagrid is a `<clr-export-datagrid-button>` (whitespace is ignored,
-  and the button may be wrapped in `@if` or `*ngIf`),
+- the closest preceding sibling of the datagrid is a `<clr-export-datagrid-button>` (whitespace and comments
+  are ignored, and the button may be wrapped in `@if` or `*ngIf`),
 - the export button binds both `[datagrid]` and `[datagridRef]`.
 
 With `--fix`, the rule adds a missing template reference and a missing export button. The button's test ID and
@@ -26,6 +26,43 @@ If a template contains multiple datagrids, each one gets a unique numbered refer
 `#datagrid2`, ...) with a matching `datagrid1Ref`, `datagrid2Ref`, ... property and suffixed test IDs.
 Reference names that are already used elsewhere in the template are skipped, so the fix never produces a
 duplicate template reference.
+
+### Hiding the button for empty or loading datagrids
+
+The generated button is wrapped in an `@if (true)` placeholder with a TODO comment above it. Replace `true`
+with the datagrid's loading state and items, so the export is not offered for an empty or incomplete datagrid:
+The button is wrapped in a `<div>` with the datagrid's width class (e.g. `clr-max-width-65`), falling back to
+`clr-max-width`. This way the right-aligned button lines up with the datagrid's right edge instead of the
+page's.
+
+```html
+<!-- TODO: replace true with !loading && items?.length to hide the export for empty or incomplete datagrids -->
+@if (true) {
+<clr-export-datagrid-button ...></clr-export-datagrid-button>
+}
+```
+
+becomes, for a datagrid with `[clrDgLoading]="loading"` and `*clrDgItems="let item of items"`:
+
+```html
+@if (!loading && items?.length) {
+<clr-export-datagrid-button ...></clr-export-datagrid-button>
+}
+```
+
+### The ElementRef as signal query
+
+The button is rendered before the datagrid, so a decorator-based `@ViewChild` would change its value after the
+button binding was checked and cause `NG0100: ExpressionChangedAfterItHasBeenCheckedError`. Use a signal query
+instead, which is re-checked within the same change detection, also when the datagrid is rendered inside `@if`
+or `*ngIf`:
+
+```ts
+readonly
+datagridRef = viewChild('datagrid', {read: ElementRef});
+```
+
+The template reads it as a signal: `[datagridRef]="datagridRef()"`.
 
 ### Backend export for server-driven datagrids
 
@@ -55,19 +92,10 @@ The following cases are reported but cannot be auto-fixed:
   moved above the datagrid manually,
 - an export button missing `[datagrid]` or `[datagridRef]`.
 
-The rule only touches the template. The component class still needs the matching `ElementRef`, and the module
-needs the `ExportDatagridButtonComponent` import. The `missingTemplateRef` message names the exact
-`@ViewChild` to add. A missing property is also caught by Angular's template type checking at build time.
-
-```ts
-@ViewChild('datagrid', {read: ElementRef, static: true})
-datagridRef
-:
-ElementRef;
-```
-
-Use `static: false` if the datagrid is rendered inside `@if` or `*ngIf`, otherwise `datagridRef` stays
-`undefined`.
+The rule only touches the template. The component class still needs the signal query, and the module (or the
+standalone component) needs the `ExportDatagridButtonComponent` import. The `missingTemplateRef` message names
+the exact `viewChild` to add. A missing property is also caught by Angular's template type checking at build
+time.
 
 Examples of **incorrect** code for this rule:
 
@@ -82,7 +110,7 @@ Examples of **incorrect** code for this rule:
 
 <clr-datagrid #datagrid>
     <clr-dg-action-bar data-testid="clr-dg-action-bar-database-demands">
-        <clr-export-datagrid-button [datagrid]="datagrid" [datagridRef]="datagridRef"></clr-export-datagrid-button>
+        <clr-export-datagrid-button [datagrid]="datagrid" [datagridRef]="datagridRef()"></clr-export-datagrid-button>
     </clr-dg-action-bar>
 </clr-datagrid>
 ```
@@ -90,17 +118,19 @@ Examples of **incorrect** code for this rule:
 Examples of **correct** code for this rule:
 
 ```html
-
+@if (!loading && items?.length) {
 <clr-export-datagrid-button
         data-testid="clr-export-datagrid-button-database-demands"
         [datagrid]="datagrid"
-        [datagridRef]="datagridRef"
+        [datagridRef]="datagridRef()"
         exportTitlePrefix="database-demands"
         [isBackendExport]="false"
         [exportButtonPosition]="'right'">
 </clr-export-datagrid-button>
-<clr-datagrid #datagrid>
+}
+<clr-datagrid #datagrid [clrDgLoading]="loading">
     <clr-dg-column [clrDgField]="'name'">Name</clr-dg-column>
+    <clr-dg-row *clrDgItems="let item of items">...</clr-dg-row>
 </clr-datagrid>
 ```
 
@@ -111,22 +141,12 @@ A server-driven datagrid with a backend export:
 <clr-export-datagrid-button
         data-testid="clr-export-datagrid-button-database-demands"
         [datagrid]="datagrid"
-        [datagridRef]="datagridRef"
+        [datagridRef]="datagridRef()"
         exportTitlePrefix="database-demands"
         [isBackendExport]="true"
         (backendExport)="exportFromBackend($event)"
         [exportButtonPosition]="'right'">
 </clr-export-datagrid-button>
 <clr-datagrid #datagrid (clrDgRefresh)="refresh($event)">
-</clr-datagrid>
-```
-
-The export button may also be rendered conditionally:
-
-```html
-@if (canExport) {
-<clr-export-datagrid-button [datagrid]="datagrid" [datagridRef]="datagridRef"></clr-export-datagrid-button>
-}
-<clr-datagrid #datagrid>
 </clr-datagrid>
 ```

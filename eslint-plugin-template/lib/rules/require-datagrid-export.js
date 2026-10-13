@@ -12,9 +12,13 @@ const EXPORT_BUTTON = "clr-export-datagrid-button";
 const REQUIRED_INPUTS = ["datagrid", "datagridRef"];
 const BACKEND_EXPORT_OUTPUT = "backendExport";
 const BACKEND_EXPORT_HANDLER = "exportFromBackend";
+const DEFAULT_WIDTH_CLASS = "clr-max-width";
+const VISIBILITY_TODO =
+    "<!-- TODO: replace true with !loading && items?.length to hide the export for empty or incomplete datagrids -->";
 
 const DATAGRID_START_PATTERN = /<clr-datagrid[\s>/]/g;
 const TEMPLATE_REF_PATTERN = /#([A-Za-z_$][\w$]*)/g;
+const WIDTH_CLASS_PATTERN = /\bclr-max-width(-\d+)?\b/;
 
 //------------------------------------------------------------------------------
 // Template AST helpers
@@ -44,7 +48,7 @@ const isBlankText = (node) => typeof node.value === "string" && node.value.trim(
 const previousSibling = (siblings, index) =>
     siblings.slice(0, index).reverse().find((node) => !isBlankText(node));
 
-// The export button itself, or one wrapped in @if / *ngIf
+// The export button itself, or one wrapped in a div, @if or *ngIf
 const exportButtonIn = (node) =>
     node && (node.name === EXPORT_BUTTON ? node : findElement(node, EXPORT_BUTTON));
 
@@ -62,19 +66,25 @@ const afterTagName = (element) => element.startSourceSpan.start.offset + 1 + ele
 // Generated markup
 //------------------------------------------------------------------------------
 
-const exportButtonLines = ({id, ref, refProperty, backend}) => [
-    `<${EXPORT_BUTTON}`,
-    `  data-testid="${EXPORT_BUTTON}-${id}"`,
-    `  [datagrid]="${ref}"`,
-    `  [datagridRef]="${refProperty}"`,
-    `  exportTitlePrefix="${id}"`,
-    `  [isBackendExport]="${backend}"`,
-    ...(backend ? [`  (${BACKEND_EXPORT_OUTPUT})="${BACKEND_EXPORT_HANDLER}($event)"`] : []),
-    `  [exportButtonPosition]="'right'">`,
-    `</${EXPORT_BUTTON}>`,
+// The wrapper takes the grid's width, so a right-aligned button lines up with the grid's edge
+const exportButtonLines = ({id, ref, refProperty, backend, widthClass}) => [
+    VISIBILITY_TODO,
+    `@if (true) {`,
+    `  <div class="${widthClass}">`,
+    `    <${EXPORT_BUTTON}`,
+    `      data-testid="${EXPORT_BUTTON}-${id}"`,
+    `      [datagrid]="${ref}"`,
+    `      [datagridRef]="${refProperty}()"`,
+    `      exportTitlePrefix="${id}"`,
+    `      [isBackendExport]="${backend}"`,
+    ...(backend ? [`      (${BACKEND_EXPORT_OUTPUT})="${BACKEND_EXPORT_HANDLER}($event)"`] : []),
+    `      [exportButtonPosition]="'right'">`,
+    `    </${EXPORT_BUTTON}>`,
+    `  </div>`,
+    `}`,
 ];
 
-// Inserted right above the datagrid
+// Inserted right above the datagrid, continuing at its indentation
 const asLeadingInsertion = (lines, element) => {
     const prefix = " ".repeat(element.startSourceSpan.start.col);
     return `${lines.join(`\n${prefix}`)}\n${prefix}`;
@@ -95,7 +105,7 @@ module.exports = {
         messages: {
             missingTemplateRef:
                 "Datagrid needs a template reference. Add #{{ref}} and in the component: " +
-                "@ViewChild('{{ref}}', {read: ElementRef}) {{refProperty}}: ElementRef",
+                "readonly {{refProperty}} = viewChild('{{ref}}', {read: ElementRef});",
             missingExport: `Datagrid has no <${EXPORT_BUTTON}> directly above it`,
             exportInsideDatagrid: `<${EXPORT_BUTTON}> must be placed directly above the <${DATAGRID}>, not inside it`,
             missingInput: `<${EXPORT_BUTTON}> requires [{{input}}]`,
@@ -113,6 +123,8 @@ module.exports = {
         const isMultiGrid = gridOffsets.length > 1;
 
         const insertAt = (offset, content) => (fixer) => fixer.insertTextAfterRange([offset, offset], content);
+        const startTagOf = (element) =>
+            text.slice(element.startSourceSpan.start.offset, element.startSourceSpan.end.offset);
 
         const allocateRef = (datagrid) => {
             if (!isMultiGrid) {
@@ -135,6 +147,7 @@ module.exports = {
                 refProperty: `${ref}Ref`,
                 id: isMultiGrid ? `${fileId}-${ref}` : fileId,
                 backend: isServerDriven(datagrid),
+                widthClass: startTagOf(datagrid).match(WIDTH_CLASS_PATTERN)?.[0] ?? DEFAULT_WIDTH_CLASS,
             };
 
             if (!existingRef) {

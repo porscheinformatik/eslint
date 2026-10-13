@@ -31,6 +31,9 @@ duplicate template reference.
 
 The generated button is wrapped in an `@if (true)` placeholder with a TODO comment above it. Replace `true`
 with the datagrid's loading state and items, so the export is not offered for an empty or incomplete datagrid:
+The button is wrapped in a `<div>` with the datagrid's width class (e.g. `clr-max-width-65`), falling back to
+`clr-max-width`. This way the right-aligned button lines up with the datagrid's right edge instead of the
+page's.
 
 ```html
 <!-- TODO: replace true with !loading && items?.length to hide the export for empty or incomplete datagrids -->

@@ -22,55 +22,43 @@ const ruleTester = new RuleTester({
 });
 
 const filename = "database-demands.component.html";
+const todo =
+    `<!-- TODO: replace true with !loading && items?.length to hide the export for empty or incomplete datagrids -->`;
 
 ruleTester.run("require-datagrid-export", rule, {
     valid: [
+        // generated markup: TODO comment and @if do not break the sibling detection
         {
             filename,
             code:
-                `<clr-export-datagrid-button\n` +
-                `  data-testid="clr-export-datagrid-button-database-demands"\n` +
-                `  [datagrid]="datagrid"\n` +
-                `  [datagridRef]="datagridRef"\n` +
-                `  exportTitlePrefix="database-demands"\n` +
-                `  [isBackendExport]="false"\n` +
-                `  [exportButtonPosition]="'right'">\n` +
-                `</clr-export-datagrid-button>\n` +
+                `${todo}\n` +
+                `@if (true) {\n` +
+                `  <clr-export-datagrid-button\n` +
+                `    data-testid="clr-export-datagrid-button-database-demands"\n` +
+                `    [datagrid]="datagrid"\n` +
+                `    [datagridRef]="datagridRef()"\n` +
+                `    exportTitlePrefix="database-demands"\n` +
+                `    [isBackendExport]="false"\n` +
+                `    [exportButtonPosition]="'right'">\n` +
+                `  </clr-export-datagrid-button>\n` +
+                `}\n` +
                 `<clr-datagrid #datagrid>\n` +
                 `</clr-datagrid>`
         },
-        // server-driven datagrid with backend export
+        // button without wrapper directly above the datagrid
         {
             filename,
             code:
-                `<clr-export-datagrid-button\n` +
-                `  data-testid="clr-export-datagrid-button-database-demands"\n` +
-                `  [datagrid]="datagrid"\n` +
-                `  [datagridRef]="datagridRef"\n` +
-                `  exportTitlePrefix="database-demands"\n` +
-                `  [isBackendExport]="true"\n` +
-                `  (backendExport)="exportFromBackend($event)"\n` +
-                `  [exportButtonPosition]="'right'">\n` +
-                `</clr-export-datagrid-button>\n` +
-                `<clr-datagrid #datagrid (clrDgRefresh)="refresh($event)">\n` +
+                `<clr-export-datagrid-button [datagrid]="datagrid" [datagridRef]="datagridRef()"></clr-export-datagrid-button>\n` +
+                `<clr-datagrid #datagrid>\n` +
                 `</clr-datagrid>`
         },
         // custom template ref name is accepted as long as the button is wired up
         {
             filename,
             code:
-                `<clr-export-datagrid-button [datagrid]="grid" [datagridRef]="gridRef"></clr-export-datagrid-button>\n` +
+                `<clr-export-datagrid-button [datagrid]="grid" [datagridRef]="gridRef()"></clr-export-datagrid-button>\n` +
                 `<clr-datagrid #grid>\n` +
-                `</clr-datagrid>`
-        },
-        // export button wrapped in a control-flow block directly above the datagrid
-        {
-            filename,
-            code:
-                `@if (canExport) {\n` +
-                `  <clr-export-datagrid-button [datagrid]="datagrid" [datagridRef]="datagridRef"></clr-export-datagrid-button>\n` +
-                `}\n` +
-                `<clr-datagrid #datagrid>\n` +
                 `</clr-datagrid>`
         },
         // export button wrapped in a structural directive directly above the datagrid
@@ -78,7 +66,7 @@ ruleTester.run("require-datagrid-export", rule, {
             filename,
             code:
                 `<ng-container *ngIf="canExport">\n` +
-                `  <clr-export-datagrid-button [datagrid]="datagrid" [datagridRef]="datagridRef"></clr-export-datagrid-button>\n` +
+                `  <clr-export-datagrid-button [datagrid]="datagrid" [datagridRef]="datagridRef()"></clr-export-datagrid-button>\n` +
                 `</ng-container>\n` +
                 `<clr-datagrid #datagrid>\n` +
                 `</clr-datagrid>`
@@ -88,7 +76,7 @@ ruleTester.run("require-datagrid-export", rule, {
             filename,
             code:
                 `<div class="content-area">\n` +
-                `  <clr-export-datagrid-button [datagrid]="datagrid" [datagridRef]="datagridRef"></clr-export-datagrid-button>\n` +
+                `  <clr-export-datagrid-button [datagrid]="datagrid" [datagridRef]="datagridRef()"></clr-export-datagrid-button>\n` +
                 `  <clr-datagrid #datagrid>\n` +
                 `  </clr-datagrid>\n` +
                 `</div>`
@@ -107,14 +95,17 @@ ruleTester.run("require-datagrid-export", rule, {
                 {messageId: 'missingExport'}
             ],
             output:
-                `<clr-export-datagrid-button\n` +
-                `  data-testid="clr-export-datagrid-button-database-demands"\n` +
-                `  [datagrid]="datagrid"\n` +
-                `  [datagridRef]="datagridRef"\n` +
-                `  exportTitlePrefix="database-demands"\n` +
-                `  [isBackendExport]="false"\n` +
-                `  [exportButtonPosition]="'right'">\n` +
-                `</clr-export-datagrid-button>\n` +
+                `${todo}\n` +
+                `@if (true) {\n` +
+                `  <clr-export-datagrid-button\n` +
+                `    data-testid="clr-export-datagrid-button-database-demands"\n` +
+                `    [datagrid]="datagrid"\n` +
+                `    [datagridRef]="datagridRef()"\n` +
+                `    exportTitlePrefix="database-demands"\n` +
+                `    [isBackendExport]="false"\n` +
+                `    [exportButtonPosition]="'right'">\n` +
+                `  </clr-export-datagrid-button>\n` +
+                `}\n` +
                 `<clr-datagrid #datagrid>\n` +
                 `</clr-datagrid>`
         },
@@ -126,15 +117,18 @@ ruleTester.run("require-datagrid-export", rule, {
                 `</clr-datagrid>`,
             errors: [{messageId: 'missingExport'}],
             output:
-                `<clr-export-datagrid-button\n` +
-                `  data-testid="clr-export-datagrid-button-database-demands"\n` +
-                `  [datagrid]="datagrid"\n` +
-                `  [datagridRef]="datagridRef"\n` +
-                `  exportTitlePrefix="database-demands"\n` +
-                `  [isBackendExport]="true"\n` +
-                `  (backendExport)="exportFromBackend($event)"\n` +
-                `  [exportButtonPosition]="'right'">\n` +
-                `</clr-export-datagrid-button>\n` +
+                `${todo}\n` +
+                `@if (true) {\n` +
+                `  <clr-export-datagrid-button\n` +
+                `    data-testid="clr-export-datagrid-button-database-demands"\n` +
+                `    [datagrid]="datagrid"\n` +
+                `    [datagridRef]="datagridRef()"\n` +
+                `    exportTitlePrefix="database-demands"\n` +
+                `    [isBackendExport]="true"\n` +
+                `    (backendExport)="exportFromBackend($event)"\n` +
+                `    [exportButtonPosition]="'right'">\n` +
+                `  </clr-export-datagrid-button>\n` +
+                `}\n` +
                 `<clr-datagrid #datagrid (clrDgRefresh)="refresh($event)">\n` +
                 `</clr-datagrid>`
         },
@@ -149,14 +143,17 @@ ruleTester.run("require-datagrid-export", rule, {
             errors: [{messageId: 'missingExport'}],
             output:
                 `<div>\n` +
-                `  <clr-export-datagrid-button\n` +
-                `    data-testid="clr-export-datagrid-button-database-demands"\n` +
-                `    [datagrid]="datagrid"\n` +
-                `    [datagridRef]="datagridRef"\n` +
-                `    exportTitlePrefix="database-demands"\n` +
-                `    [isBackendExport]="false"\n` +
-                `    [exportButtonPosition]="'right'">\n` +
-                `  </clr-export-datagrid-button>\n` +
+                `  ${todo}\n` +
+                `  @if (true) {\n` +
+                `    <clr-export-datagrid-button\n` +
+                `      data-testid="clr-export-datagrid-button-database-demands"\n` +
+                `      [datagrid]="datagrid"\n` +
+                `      [datagridRef]="datagridRef()"\n` +
+                `      exportTitlePrefix="database-demands"\n` +
+                `      [isBackendExport]="false"\n` +
+                `      [exportButtonPosition]="'right'">\n` +
+                `    </clr-export-datagrid-button>\n` +
+                `  }\n` +
                 `  <clr-datagrid #datagrid>\n` +
                 `  </clr-datagrid>\n` +
                 `</div>`
@@ -169,14 +166,17 @@ ruleTester.run("require-datagrid-export", rule, {
                 `</clr-datagrid>`,
             errors: [{messageId: 'missingExport'}],
             output:
-                `<clr-export-datagrid-button\n` +
-                `  data-testid="clr-export-datagrid-button-database-demands"\n` +
-                `  [datagrid]="grid"\n` +
-                `  [datagridRef]="gridRef"\n` +
-                `  exportTitlePrefix="database-demands"\n` +
-                `  [isBackendExport]="false"\n` +
-                `  [exportButtonPosition]="'right'">\n` +
-                `</clr-export-datagrid-button>\n` +
+                `${todo}\n` +
+                `@if (true) {\n` +
+                `  <clr-export-datagrid-button\n` +
+                `    data-testid="clr-export-datagrid-button-database-demands"\n` +
+                `    [datagrid]="grid"\n` +
+                `    [datagridRef]="gridRef()"\n` +
+                `    exportTitlePrefix="database-demands"\n` +
+                `    [isBackendExport]="false"\n` +
+                `    [exportButtonPosition]="'right'">\n` +
+                `  </clr-export-datagrid-button>\n` +
+                `}\n` +
                 `<clr-datagrid #grid>\n` +
                 `</clr-datagrid>`
         },
@@ -186,7 +186,7 @@ ruleTester.run("require-datagrid-export", rule, {
             code:
                 `<clr-datagrid #datagrid>\n` +
                 `  <clr-dg-action-bar data-testid="clr-dg-action-bar-database-demands">\n` +
-                `    <clr-export-datagrid-button [datagrid]="datagrid" [datagridRef]="datagridRef"></clr-export-datagrid-button>\n` +
+                `    <clr-export-datagrid-button [datagrid]="datagrid" [datagridRef]="datagridRef()"></clr-export-datagrid-button>\n` +
                 `  </clr-dg-action-bar>\n` +
                 `</clr-datagrid>`,
             errors: [{messageId: 'exportInsideDatagrid'}],
@@ -229,24 +229,30 @@ ruleTester.run("require-datagrid-export", rule, {
                 {messageId: 'missingExport'}
             ],
             output:
-                `<clr-export-datagrid-button\n` +
-                `  data-testid="clr-export-datagrid-button-database-demands-datagrid1"\n` +
-                `  [datagrid]="datagrid1"\n` +
-                `  [datagridRef]="datagrid1Ref"\n` +
-                `  exportTitlePrefix="database-demands-datagrid1"\n` +
-                `  [isBackendExport]="false"\n` +
-                `  [exportButtonPosition]="'right'">\n` +
-                `</clr-export-datagrid-button>\n` +
+                `${todo}\n` +
+                `@if (true) {\n` +
+                `  <clr-export-datagrid-button\n` +
+                `    data-testid="clr-export-datagrid-button-database-demands-datagrid1"\n` +
+                `    [datagrid]="datagrid1"\n` +
+                `    [datagridRef]="datagrid1Ref()"\n` +
+                `    exportTitlePrefix="database-demands-datagrid1"\n` +
+                `    [isBackendExport]="false"\n` +
+                `    [exportButtonPosition]="'right'">\n` +
+                `  </clr-export-datagrid-button>\n` +
+                `}\n` +
                 `<clr-datagrid #datagrid1>\n` +
                 `</clr-datagrid>\n` +
-                `<clr-export-datagrid-button\n` +
-                `  data-testid="clr-export-datagrid-button-database-demands-datagrid2"\n` +
-                `  [datagrid]="datagrid2"\n` +
-                `  [datagridRef]="datagrid2Ref"\n` +
-                `  exportTitlePrefix="database-demands-datagrid2"\n` +
-                `  [isBackendExport]="false"\n` +
-                `  [exportButtonPosition]="'right'">\n` +
-                `</clr-export-datagrid-button>\n` +
+                `${todo}\n` +
+                `@if (true) {\n` +
+                `  <clr-export-datagrid-button\n` +
+                `    data-testid="clr-export-datagrid-button-database-demands-datagrid2"\n` +
+                `    [datagrid]="datagrid2"\n` +
+                `    [datagridRef]="datagrid2Ref()"\n` +
+                `    exportTitlePrefix="database-demands-datagrid2"\n` +
+                `    [isBackendExport]="false"\n` +
+                `    [exportButtonPosition]="'right'">\n` +
+                `  </clr-export-datagrid-button>\n` +
+                `}\n` +
                 `<clr-datagrid #datagrid2>\n` +
                 `</clr-datagrid>`
         },
@@ -266,24 +272,30 @@ ruleTester.run("require-datagrid-export", rule, {
                 {messageId: 'missingExport'}
             ],
             output:
-                `<clr-export-datagrid-button\n` +
-                `  data-testid="clr-export-datagrid-button-database-demands-datagrid2"\n` +
-                `  [datagrid]="datagrid2"\n` +
-                `  [datagridRef]="datagrid2Ref"\n` +
-                `  exportTitlePrefix="database-demands-datagrid2"\n` +
-                `  [isBackendExport]="false"\n` +
-                `  [exportButtonPosition]="'right'">\n` +
-                `</clr-export-datagrid-button>\n` +
+                `${todo}\n` +
+                `@if (true) {\n` +
+                `  <clr-export-datagrid-button\n` +
+                `    data-testid="clr-export-datagrid-button-database-demands-datagrid2"\n` +
+                `    [datagrid]="datagrid2"\n` +
+                `    [datagridRef]="datagrid2Ref()"\n` +
+                `    exportTitlePrefix="database-demands-datagrid2"\n` +
+                `    [isBackendExport]="false"\n` +
+                `    [exportButtonPosition]="'right'">\n` +
+                `  </clr-export-datagrid-button>\n` +
+                `}\n` +
                 `<clr-datagrid #datagrid2>\n` +
                 `</clr-datagrid>\n` +
-                `<clr-export-datagrid-button\n` +
-                `  data-testid="clr-export-datagrid-button-database-demands-datagrid3"\n` +
-                `  [datagrid]="datagrid3"\n` +
-                `  [datagridRef]="datagrid3Ref"\n` +
-                `  exportTitlePrefix="database-demands-datagrid3"\n` +
-                `  [isBackendExport]="false"\n` +
-                `  [exportButtonPosition]="'right'">\n` +
-                `</clr-export-datagrid-button>\n` +
+                `${todo}\n` +
+                `@if (true) {\n` +
+                `  <clr-export-datagrid-button\n` +
+                `    data-testid="clr-export-datagrid-button-database-demands-datagrid3"\n` +
+                `    [datagrid]="datagrid3"\n` +
+                `    [datagridRef]="datagrid3Ref()"\n` +
+                `    exportTitlePrefix="database-demands-datagrid3"\n` +
+                `    [isBackendExport]="false"\n` +
+                `    [exportButtonPosition]="'right'">\n` +
+                `  </clr-export-datagrid-button>\n` +
+                `}\n` +
                 `<clr-datagrid #datagrid3>\n` +
                 `</clr-datagrid>\n` +
                 `<input #datagrid1>`

@@ -12,6 +12,8 @@ const EXPORT_BUTTON = "clr-export-datagrid-button";
 const REQUIRED_INPUTS = ["datagrid", "datagridRef"];
 const BACKEND_EXPORT_OUTPUT = "backendExport";
 const BACKEND_EXPORT_HANDLER = "exportFromBackend";
+const VISIBILITY_TODO =
+    "<!-- TODO: replace true with !loading && items?.length to hide the export for empty or incomplete datagrids -->";
 
 const DATAGRID_START_PATTERN = /<clr-datagrid[\s>/]/g;
 const TEMPLATE_REF_PATTERN = /#([A-Za-z_$][\w$]*)/g;
@@ -63,18 +65,21 @@ const afterTagName = (element) => element.startSourceSpan.start.offset + 1 + ele
 //------------------------------------------------------------------------------
 
 const exportButtonLines = ({id, ref, refProperty, backend}) => [
-    `<${EXPORT_BUTTON}`,
-    `  data-testid="${EXPORT_BUTTON}-${id}"`,
-    `  [datagrid]="${ref}"`,
-    `  [datagridRef]="${refProperty}"`,
-    `  exportTitlePrefix="${id}"`,
-    `  [isBackendExport]="${backend}"`,
-    ...(backend ? [`  (${BACKEND_EXPORT_OUTPUT})="${BACKEND_EXPORT_HANDLER}($event)"`] : []),
-    `  [exportButtonPosition]="'right'">`,
-    `</${EXPORT_BUTTON}>`,
+    VISIBILITY_TODO,
+    `@if (true) {`,
+    `  <${EXPORT_BUTTON}`,
+    `    data-testid="${EXPORT_BUTTON}-${id}"`,
+    `    [datagrid]="${ref}"`,
+    `    [datagridRef]="${refProperty}()"`,
+    `    exportTitlePrefix="${id}"`,
+    `    [isBackendExport]="${backend}"`,
+    ...(backend ? [`    (${BACKEND_EXPORT_OUTPUT})="${BACKEND_EXPORT_HANDLER}($event)"`] : []),
+    `    [exportButtonPosition]="'right'">`,
+    `  </${EXPORT_BUTTON}>`,
+    `}`,
 ];
 
-// Inserted right above the datagrid
+// Inserted right above the datagrid, continuing at its indentation
 const asLeadingInsertion = (lines, element) => {
     const prefix = " ".repeat(element.startSourceSpan.start.col);
     return `${lines.join(`\n${prefix}`)}\n${prefix}`;
@@ -95,7 +100,7 @@ module.exports = {
         messages: {
             missingTemplateRef:
                 "Datagrid needs a template reference. Add #{{ref}} and in the component: " +
-                "@ViewChild('{{ref}}', {read: ElementRef}) {{refProperty}}: ElementRef",
+                "readonly {{refProperty}} = viewChild('{{ref}}', {read: ElementRef});",
             missingExport: `Datagrid has no <${EXPORT_BUTTON}> directly above it`,
             exportInsideDatagrid: `<${EXPORT_BUTTON}> must be placed directly above the <${DATAGRID}>, not inside it`,
             missingInput: `<${EXPORT_BUTTON}> requires [{{input}}]`,
